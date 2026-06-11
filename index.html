@@ -22,13 +22,10 @@
             <h2 class="fw-bold text-dark mb-4">Controle de Estoque</h2>
             
             <form id="formProduto" class="row g-2 justify-content-center mb-4 text-start">
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <input type="text" class="form-control form-control-lg bg-light border-secondary-subtle" id="input-nome" placeholder="Nome do Produto" required>
                 </div>
                 <div class="col-md-3">
-                    <input type="text" class="form-control form-control-lg bg-light border-secondary-subtle" id="input-categoria" placeholder="Categoria" required>
-                </div>
-                <div class="col-md-2">
                     <input type="number" class="form-control form-control-lg bg-light border-secondary-subtle" id="input-quantidade" placeholder="Qtd" required min="1">
                 </div>
                 <div class="col-md-3">
@@ -37,12 +34,6 @@
             </form>
 
             <hr class="my-4 border-secondary-subtle">
-
-            <div class="row justify-content-center mb-4">
-                <div class="col-md-8">
-                    <input type="text" class="form-control form-control-lg shadow-sm" id="pesquisa" placeholder="Pesquisar Produto..." onkeyup="filtrarProdutos()">
-                </div>
-            </div>
 
             <div id="lista-materiais" class="row text-start mt-3"></div>
         </main>

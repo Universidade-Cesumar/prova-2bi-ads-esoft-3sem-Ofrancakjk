@@ -1,7 +1,4 @@
-// Sua nova URL da MockAPI
 const API = "https://6a2a0285f59cb8f65f1df32a.mockapi.io/api/v1/materiais";
-
-let produtosGlobal = []; 
 
 // Validação do Autograding: Iniciar a listagem ao carregar e atrelar evento ao botão exato
 document.addEventListener("DOMContentLoaded", () => {
@@ -9,14 +6,13 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btn-cadastrar").addEventListener("click", cadastrarProduto);
 });
 
-// GET: Buscar os produtos
+// GET: Buscar os produtos na MockAPI
 async function listarProdutos() {
     try {
         const resposta = await fetch(API);
         if (!resposta.ok) throw new Error("Erro ao buscar dados da API.");
         
         const produtos = await resposta.json();
-        produtosGlobal = produtos; 
         renderizarLista(produtos);
     } catch (error) {
         console.error("Erro na listagem:", error);
@@ -25,7 +21,7 @@ async function listarProdutos() {
 
 // Injeta os CARDS na Div obrigatória
 function renderizarLista(produtos) {
-    const lista = document.getElementById("lista-materiais"); // ID corrigido para o autograding
+    const lista = document.getElementById("lista-materiais");
     lista.innerHTML = ""; 
 
     if (produtos.length === 0) {
@@ -42,7 +38,6 @@ function renderizarLista(produtos) {
                             <h5 class="card-title fw-bold text-dark mb-0">${produto.nome}</h5>
                             <span class="text-muted small">#${produto.id}</span>
                         </div>
-                        <p class="card-text mb-1 text-muted">Categoria: <strong class="text-dark">${produto.categoria || '-'}</strong></p>
                         <p class="card-text mb-3 text-muted">Quantidade: <span class="badge bg-dark fs-6">${produto.quantidade}</span></p>
                         <button class="btn btn-sm btn-outline-danger w-100 fw-bold" onclick="excluirProduto('${produto.id}')">Excluir Registro</button>
                     </div>
@@ -52,31 +47,17 @@ function renderizarLista(produtos) {
     });
 }
 
-// Filtro de Pesquisa
-function filtrarProdutos() {
-    const termo = document.getElementById("pesquisa").value.toLowerCase();
-    
-    const produtosFiltrados = produtosGlobal.filter(produto => 
-        produto.nome.toLowerCase().includes(termo) || 
-        (produto.categoria && produto.categoria.toLowerCase().includes(termo))
-    );
-    
-    renderizarLista(produtosFiltrados);
-}
-
 // POST: Enviar para a MockAPI
 async function cadastrarProduto() {
     const nomeInput = document.getElementById("input-nome");
-    const categoriaInput = document.getElementById("input-categoria");
     const quantidadeInput = document.getElementById("input-quantidade");
     const btn = document.getElementById("btn-cadastrar");
     
     const nome = nomeInput.value.trim();
-    const categoria = categoriaInput.value.trim();
     const quantidade = quantidadeInput.value.trim();
     
-    if (!nome || !quantidade || !categoria) {
-        alert("Por favor, preencha todos os campos do formulário.");
+    if (!nome || !quantidade) {
+        alert("Por favor, preencha o nome e a quantidade do produto.");
         return;
     }
     
@@ -85,7 +66,6 @@ async function cadastrarProduto() {
 
     const novoProduto = {
         nome: nome,
-        categoria: categoria,
         quantidade: Number(quantidade)
     };
 
@@ -98,9 +78,7 @@ async function cadastrarProduto() {
         
         if (resposta.ok) {
             nomeInput.value = "";
-            categoriaInput.value = "";
             quantidadeInput.value = "";
-            document.getElementById("pesquisa").value = ""; 
             
             listarProdutos(); 
         } else {
