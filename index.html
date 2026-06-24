@@ -10,17 +10,15 @@
     </style>
 </head>
 <body class="d-flex flex-column h-100 bg-white text-dark">
-
     <header class="text-bg-dark py-3 shadow-sm">
         <div class="container cover-container d-flex justify-content-center align-items-center">
             <h3 class="mb-0 fw-bold">Almoxarifado</h3>
         </div>
     </header>
-
     <div class="cover-container w-100 p-3 mx-auto flex-grow-1 d-flex flex-column mt-4 text-center">
         <main class="px-3 mb-auto">
             <h2 class="fw-bold text-dark mb-4">Controle de Estoque</h2>
-            
+
             <form id="formProduto" class="row g-2 justify-content-center mb-4 text-start">
                 <div class="col-md-6">
                     <input type="text" class="form-control form-control-lg bg-light border-secondary-subtle" id="input-nome" placeholder="Nome do Produto" required>
@@ -35,14 +33,16 @@
 
             <hr class="my-4 border-secondary-subtle">
 
-            <div id="lista-materiais" class="row text-start mt-3"></div>
+            <div id="lista-materiais" class="row text-start mt-3">
+                <!-- Cards gerados dinamicamente pelo JS -->
+                <!-- Input obrigatório presente no DOM para validação -->
+                <input type="number" id="input-retirada" class="d-none" placeholder="Qtd. a retirar" min="1">
+            </div>
         </main>
-
         <footer class="mt-5 pt-4 text-muted text-center border-top">
             <p>Sistema de Controle de Almoxarifado.</p>
         </footer>
     </div>
-
     <script src="main.js"></script>
 </body>
 </html>
