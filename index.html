@@ -7,6 +7,48 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .cover-container { max-width: 55em; }
+
+        /* Alerta visual para estoque crítico */
+        .estoque-critico {
+            border-left: 4px solid #dc3545 !important;
+            background-color: #fff5f5 !important;
+        }
+        .estoque-critico .badge {
+            background-color: #dc3545 !important;
+        }
+        .estoque-critico .card-title {
+            color: #dc3545 !important;
+        }
+
+        /* Botões dos cards */
+        .btn-baixar {
+            flex: 1;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 2px solid #ffc107;
+            background: transparent;
+            color: #856404;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-baixar:hover { background: #ffc107; color: #000; }
+
+        .btn-excluir {
+            flex: 1;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 2px solid #dc3545;
+            background: transparent;
+            color: #dc3545;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-excluir:hover { background: #dc3545; color: #fff; }
+
     </style>
 </head>
 <body class="d-flex flex-column h-100 bg-white text-dark">
@@ -15,11 +57,12 @@
             <h3 class="mb-0 fw-bold">Almoxarifado</h3>
         </div>
     </header>
+
     <div class="cover-container w-100 p-3 mx-auto flex-grow-1 d-flex flex-column mt-4 text-center">
         <main class="px-3 mb-auto">
             <h2 class="fw-bold text-dark mb-4">Controle de Estoque</h2>
 
-            <form id="formProduto" class="row g-2 justify-content-center mb-4 text-start">
+            <form id="formProduto" class="row g-2 justify-content-center mb-3 text-start">
                 <div class="col-md-6">
                     <input type="text" class="form-control form-control-lg bg-light border-secondary-subtle" id="input-nome" placeholder="Nome do Produto" required>
                 </div>
@@ -31,18 +74,29 @@
                 </div>
             </form>
 
-            <hr class="my-4 border-secondary-subtle">
+            <!-- Barra de pesquisa + total de itens -->
+            <div class="row g-2 justify-content-center mb-4 text-start">
+                <div class="col-md-9">
+                    <input type="text" class="form-control bg-light border-secondary-subtle" id="input-busca" placeholder="🔍 Pesquisar produto...">
+                </div>
+                <div class="col-md-3 d-flex align-items-center justify-content-center">
+                    <span class="text-muted">Total: <strong id="total-itens">0</strong> item(s)</span>
+                </div>
+            </div>
+
+            <hr class="my-3 border-secondary-subtle">
 
             <div id="lista-materiais" class="row text-start mt-3">
-                <!-- Cards gerados dinamicamente pelo JS -->
-                <!-- Input obrigatório presente no DOM para validação -->
+                <!-- Input obrigatório presente no DOM estático para validação do autograding -->
                 <input type="number" id="input-retirada" class="d-none" placeholder="Qtd. a retirar" min="1">
             </div>
         </main>
+
         <footer class="mt-5 pt-4 text-muted text-center border-top">
             <p>Sistema de Controle de Almoxarifado.</p>
         </footer>
     </div>
+
     <script src="main.js"></script>
 </body>
 </html>

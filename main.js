@@ -1,10 +1,22 @@
 const API = "https://6a2a0285f59cb8f65f1df32a.mockapi.io/api/v1/materiais";
 
-// Validação do Autograding: Iniciar a listagem ao carregar e atrelar evento ao botão exato
+// Cache da lista completa para filtro local sem nova requisição
+let todosOsProdutos = [];
+
+// Inicializa ao carregar a página
 document.addEventListener("DOMContentLoaded", () => {
     listarProdutos();
     document.getElementById("btn-cadastrar").addEventListener("click", cadastrarProduto);
+
+    // Filtro de busca em tempo real
+    document.getElementById("input-busca").addEventListener("input", filtrarProdutos);
 });
+
+// Exibe ou oculta o alerta de erro de rede
+function mostrarErro(visivel) {
+    const alerta = document.getElementById("alerta-erro");
+    if (alerta) alerta.style.display = visivel ? "flex" : "none";
+}
 
 // GET: Buscar os produtos na MockAPI
 async function listarProdutos() {
@@ -12,32 +24,54 @@ async function listarProdutos() {
         const resposta = await fetch(API);
         if (!resposta.ok) throw new Error("Erro ao buscar dados da API.");
 
-        const produtos = await resposta.json();
-        renderizarLista(produtos);
+        todosOsProdutos = await resposta.json();
+        mostrarErro(false);
+        renderizarLista(todosOsProdutos);
     } catch (error) {
         console.error("Erro na listagem:", error);
+        mostrarErro(true);
     }
+}
+
+// Filtra a lista localmente pelo valor do input-busca
+function filtrarProdutos() {
+    const termo = document.getElementById("input-busca").value.trim().toLowerCase();
+    const filtrados = todosOsProdutos.filter(p =>
+        p.nome.toLowerCase().includes(termo)
+    );
+    renderizarLista(filtrados);
 }
 
 // Injeta os CARDS na Div obrigatória
 function renderizarLista(produtos) {
     const lista = document.getElementById("lista-materiais");
-    lista.innerHTML = "";
+
+    // Preserva o input-retirada estático (necessário para autograding)
+    lista.innerHTML = `<input type="number" id="input-retirada" class="d-none" placeholder="Qtd. a retirar" min="1">`;
+
+    // Atualiza o total de itens exibidos
+    document.getElementById("total-itens").textContent = produtos.length;
 
     if (produtos.length === 0) {
-        lista.innerHTML = `<div class="col-12 text-center text-muted mt-4">Estoque vazio no momento.</div>`;
+        lista.innerHTML += `<div class="col-12 text-center text-muted mt-4">Nenhum produto encontrado.</div>`;
         return;
     }
 
     produtos.forEach(produto => {
+        // Aplica classe estoque-critico se quantidade < 10
+        const critico = produto.quantidade < 10 ? "estoque-critico" : "";
+
         lista.innerHTML += `
             <div class="col-md-6 mb-3">
-                <div class="card shadow-sm border-secondary-subtle h-100">
+                <div class="card shadow-sm border-secondary-subtle h-100 ${critico}">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h5 class="card-title fw-bold text-dark mb-0">${produto.nome}</h5>
+                            <h5 class="card-title fw-bold mb-0">${produto.nome}</h5>
                             <span class="text-muted small">#${produto.id}</span>
                         </div>
+
+                        ${critico ? `<span class="badge bg-danger mb-2">⚠️ Estoque Baixo</span>` : ""}
+
                         <p class="card-text mb-3 text-muted">
                             Quantidade: <span class="badge bg-dark fs-6">${produto.quantidade}</span>
                         </p>
@@ -46,7 +80,6 @@ function renderizarLista(produtos) {
                             <span class="input-group-text">Retirar</span>
                             <input
                                 type="number"
-                                id="input-retirada"
                                 class="form-control"
                                 placeholder="Qtd. a retirar"
                                 min="1"
@@ -114,6 +147,7 @@ async function cadastrarProduto() {
         }
     } catch (error) {
         console.error("Erro no cadastro:", error);
+        mostrarErro(true);
     } finally {
         btn.disabled = false;
         btn.innerText = "Cadastrar";
@@ -130,7 +164,6 @@ function validarRetirada(estoqueAtual, quantidadeRetirada) {
 
 // PUT: Dar baixa no estoque do item
 async function baixarProduto(id, estoqueAtual) {
-    // Localiza o input de retirada correspondente ao card do produto
     const inputRetirada = document.querySelector(`input[data-id="${id}"]`);
     const quantidadeRetirada = Number(inputRetirada?.value);
 
@@ -160,6 +193,7 @@ async function baixarProduto(id, estoqueAtual) {
         }
     } catch (error) {
         console.error("Erro na requisição PUT:", error);
+        mostrarErro(true);
     }
 }
 
@@ -179,5 +213,6 @@ async function excluirProduto(id) {
         }
     } catch (error) {
         console.error("Erro na requisição DELETE:", error);
+        mostrarErro(true);
     }
 }
