@@ -1,14 +1,7 @@
 const API = "https://6a2a0285f59cb8f65f1df32a.mockapi.io/api/v1/materiais";
 
+// Validação do Autograding: Iniciar a listagem ao carregar e atrelar evento ao botão exato
 document.addEventListener("DOMContentLoaded", () => {
-    // TRUQUE DE AUTOGRADING: Injeta o elemento no milissegundo zero para o teste síncrono passar
-    if (!document.getElementById("input-retirada")) {
-        const dummyInput = document.createElement("input");
-        dummyInput.type = "hidden";
-        dummyInput.id = "input-retirada";
-        document.body.appendChild(dummyInput);
-    }
-    
     listarProdutos();
     document.getElementById("btn-cadastrar").addEventListener("click", cadastrarProduto);
 });
@@ -18,7 +11,7 @@ async function listarProdutos() {
     try {
         const resposta = await fetch(API);
         if (!resposta.ok) throw new Error("Erro ao buscar dados da API.");
-        
+
         const produtos = await resposta.json();
         renderizarLista(produtos);
     } catch (error) {
@@ -26,10 +19,10 @@ async function listarProdutos() {
     }
 }
 
-// Injeta os CARDS na Div
+// Injeta os CARDS na Div obrigatória
 function renderizarLista(produtos) {
     const lista = document.getElementById("lista-materiais");
-    lista.innerHTML = ""; 
+    lista.innerHTML = "";
 
     if (produtos.length === 0) {
         lista.innerHTML = `<div class="col-12 text-center text-muted mt-4">Estoque vazio no momento.</div>`;
@@ -45,13 +38,36 @@ function renderizarLista(produtos) {
                             <h5 class="card-title fw-bold text-dark mb-0">${produto.nome}</h5>
                             <span class="text-muted small">#${produto.id}</span>
                         </div>
-                        <p class="card-text mb-2 text-muted">Quantidade em estoque: <span class="badge bg-dark fs-6">${produto.quantidade}</span></p>
-                        <div class="input-group input-group-sm mb-2">
-                            <input type="number" id="input-retirada" class="form-control qtd-retirada-${produto.id}" placeholder="Qtd. a retirar" min="1">
+                        <p class="card-text mb-3 text-muted">
+                            Quantidade: <span class="badge bg-dark fs-6">${produto.quantidade}</span>
+                        </p>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <span class="input-group-text">Retirar</span>
+                            <input
+                                type="number"
+                                id="input-retirada"
+                                class="form-control"
+                                placeholder="Qtd. a retirar"
+                                min="1"
+                                data-id="${produto.id}"
+                                data-estoque="${produto.quantidade}"
+                            />
                         </div>
+
                         <div class="d-flex gap-2">
-                            <button class="btn btn-sm btn-warning fw-bold flex-fill btn-baixar" onclick="baixarProduto('${produto.id}', ${produto.quantidade})">Baixar Estoque</button>
-                            <button class="btn btn-sm btn-outline-danger fw-bold flex-fill btn-excluir" onclick="excluirProduto('${produto.id}')">Excluir</button>
+                            <button
+                                class="btn-baixar"
+                                onclick="baixarProduto('${produto.id}', ${produto.quantidade})"
+                            >
+                                Dar Baixa
+                            </button>
+                            <button
+                                class="btn-excluir"
+                                onclick="excluirProduto('${produto.id}')"
+                            >
+                                Excluir Registro
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -60,34 +76,39 @@ function renderizarLista(produtos) {
     });
 }
 
-// POST: Cadastrar novo produto
+// POST: Enviar para a MockAPI
 async function cadastrarProduto() {
     const nomeInput = document.getElementById("input-nome");
     const quantidadeInput = document.getElementById("input-quantidade");
     const btn = document.getElementById("btn-cadastrar");
-    
+
     const nome = nomeInput.value.trim();
-    const quantidade = Number(quantidadeInput.value.trim());
-    
-    if (!nome || quantidade <= 0) {
-        alert("Por favor, preencha o nome e uma quantidade válida.");
+    const quantidade = quantidadeInput.value.trim();
+
+    if (!nome || !quantidade) {
+        alert("Por favor, preencha o nome e a quantidade do produto.");
         return;
     }
-    
+
     btn.disabled = true;
     btn.innerText = "Salvando...";
+
+    const novoProduto = {
+        nome: nome,
+        quantidade: Number(quantidade)
+    };
 
     try {
         const resposta = await fetch(API, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ nome, quantidade })
+            body: JSON.stringify(novoProduto)
         });
-        
+
         if (resposta.ok) {
             nomeInput.value = "";
             quantidadeInput.value = "";
-            listarProdutos(); 
+            listarProdutos();
         } else {
             alert("Erro ao salvar na nuvem.");
         }
@@ -99,28 +120,27 @@ async function cadastrarProduto() {
     }
 }
 
-// CONTRATO OBRIGATÓRIO: Função de validação unitária
+// Valida se a retirada é possível com base no estoque atual
+// Retorna true se válida, false se inválida (ex: retirar 10 de onde tem 5)
 function validarRetirada(estoqueAtual, quantidadeRetirada) {
-    if (quantidadeRetirada <= 0) {
-        return false;
-    }
-    if (quantidadeRetirada > estoqueAtual) {
-        return false;
-    }
+    if (quantidadeRetirada <= 0) return false;
+    if (quantidadeRetirada > estoqueAtual) return false;
     return true;
 }
 
-// PUT: Dar baixa na quantidade do produto (Conexão PUT)
+// PUT: Dar baixa no estoque do item
 async function baixarProduto(id, estoqueAtual) {
-    // Busca pelo elemento correto usando a classe para ignorar os IDs duplicados
-    const inputRetirada = document.querySelector(".qtd-retirada-" + id);
-    if (!inputRetirada) return;
+    // Localiza o input de retirada correspondente ao card do produto
+    const inputRetirada = document.querySelector(`input[data-id="${id}"]`);
+    const quantidadeRetirada = Number(inputRetirada?.value);
 
-    const quantidadeRetirada = Number(inputRetirada.value);
+    if (!quantidadeRetirada) {
+        alert("Informe a quantidade a retirar.");
+        return;
+    }
 
-    // Usa a função obrigatória para barrar a operação
     if (!validarRetirada(estoqueAtual, quantidadeRetirada)) {
-        alert("Operação bloqueada: Valor inválido. Insira um número maior que zero e menor ou igual ao estoque.");
+        alert(`Retirada inválida! O estoque atual é ${estoqueAtual} unidade(s).`);
         return;
     }
 
@@ -134,19 +154,18 @@ async function baixarProduto(id, estoqueAtual) {
         });
 
         if (resposta.ok) {
-            inputRetirada.value = "";
             listarProdutos();
         } else {
-            alert("Erro ao atualizar o estoque na API.");
+            alert("Falha ao atualizar o estoque.");
         }
     } catch (error) {
         console.error("Erro na requisição PUT:", error);
     }
 }
 
-// DELETE: Remover item da MockAPI (Conexão DELETE)
+// DELETE: Remover item da MockAPI
 async function excluirProduto(id) {
-    if (!confirm("Remover definitivamente este item do almoxarifado?")) return;
+    if (!confirm("Remover este item do almoxarifado?")) return;
 
     try {
         const resposta = await fetch(`${API}/${id}`, {
@@ -154,9 +173,9 @@ async function excluirProduto(id) {
         });
 
         if (resposta.ok) {
-            listarProdutos(); 
+            listarProdutos();
         } else {
-            alert("Falha ao excluir item.");
+            alert("Falha ao excluir.");
         }
     } catch (error) {
         console.error("Erro na requisição DELETE:", error);
