@@ -38,8 +38,14 @@ function renderizarLista(produtos) {
                             <h5 class="card-title fw-bold text-dark mb-0">${produto.nome}</h5>
                             <span class="text-muted small">#${produto.id}</span>
                         </div>
-                        <p class="card-text mb-3 text-muted">Quantidade: <span class="badge bg-dark fs-6">${produto.quantidade}</span></p>
-                        <button class="btn btn-sm btn-outline-danger w-100 fw-bold" onclick="excluirProduto('${produto.id}')">Excluir Registro</button>
+                        <p class="card-text mb-2 text-muted">Quantidade em estoque: <span class="badge bg-dark fs-6">${produto.quantidade}</span></p>
+                        <div class="input-group input-group-sm mb-2">
+                            <input type="number" id="input-retirada" class="form-control" placeholder="Qtd. a retirar" min="1">
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-warning fw-bold flex-fill btn-baixar" onclick="baixarProduto('${produto.id}', ${produto.quantidade})">Baixar Estoque</button>
+                            <button class="btn btn-sm btn-outline-danger fw-bold flex-fill btn-excluir" onclick="excluirProduto('${produto.id}')">Excluir</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -89,6 +95,43 @@ async function cadastrarProduto() {
     } finally {
         btn.disabled = false;
         btn.innerText = "Cadastrar";
+    }
+}
+
+// VALIDAÇÃO: Verifica se a retirada é válida (não negativa e não maior que o estoque)
+function validarRetirada(estoqueAtual, quantidadeRetirada) {
+    if (quantidadeRetirada <= 0) return false;
+    if (quantidadeRetirada > estoqueAtual) return false;
+    return true;
+}
+
+// PUT: Dar baixa na quantidade do produto
+async function baixarProduto(id, estoqueAtual) {
+    const inputRetirada = document.getElementById("input-retirada");
+    const quantidadeRetirada = Number(inputRetirada.value);
+
+    if (!validarRetirada(estoqueAtual, quantidadeRetirada)) {
+        alert("Quantidade inválida. Verifique se o valor é maior que zero e não ultrapassa o estoque disponível.");
+        return;
+    }
+
+    const novaQuantidade = estoqueAtual - quantidadeRetirada;
+
+    try {
+        const resposta = await fetch(`${API}/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ quantidade: novaQuantidade })
+        });
+
+        if (resposta.ok) {
+            inputRetirada.value = "";
+            listarProdutos();
+        } else {
+            alert("Erro ao atualizar o estoque.");
+        }
+    } catch (error) {
+        console.error("Erro na requisição PUT:", error);
     }
 }
 
